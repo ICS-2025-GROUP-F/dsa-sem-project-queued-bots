@@ -14,8 +14,8 @@ import doctors_LL
 import patient_queue
 from doctors_LL import *
 # Init DB access (forces import)
-doctors_LL.get_all_doctors
-patient_queue.get_all_patients
+doctors_LL.get_all_doctors()
+patient_queue.get_all_patients()
 
 # Create UI
 root = tk.Tk()
@@ -55,7 +55,8 @@ tk.Button(root, text="Add Doctor", command=add_doctor).grid(row=3, column=0, col
 # --- Doctor and Patient Selection ---
 tk.Label(root, text="Select Doctor").grid(row=4, column=0)
 doctor_var = tk.StringVar()
-doctor_menu = tk.OptionMenu(root, doctor_var, "")
+doctor_menu = tk.OptionMenu(root, doctor_var, "", command=lambda _: update_appointment_list())
+
 doctor_menu.grid(row=4, column=1, sticky="ew")
 
 tk.Label(root, text="Select Patient").grid(row=5, column=0)
@@ -124,13 +125,21 @@ def update_appointment_list():
     try:
         doc_id = doctor_var.get().split(" - ")[0]
     except IndexError:
+        appointment_listbox.insert('end', "No doctor selected.")
         return
 
     appointments = doctors_LL.get_appointments_for_doctor(doc_id)
     all_patients = {p[0]: p[1] for p in patient_queue.get_all_patients()}
-    for pid in appointments:
-        name = all_patients.get(pid, "Unknown")
-        appointment_listbox.insert('end', f"{name} (ID: {pid})")
+
+    if not appointments:
+        appointment_listbox.insert('end', "No appointments for selected doctor.")
+    else:
+        appointment_listbox.insert('end', "Appointments:")
+        for i, pid in enumerate(appointments):
+            name = all_patients.get(pid, "Unknown")
+            arrow = " -> " if i < len(appointments) - 1 else " -> None"
+            appointment_listbox.insert('end', f"{name} (ID: {pid}){arrow}")
+
 
 # Initial load
 update_doctor_list()
